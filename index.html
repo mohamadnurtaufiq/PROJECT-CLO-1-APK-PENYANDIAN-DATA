@@ -481,20 +481,20 @@ function ecbEncrypt() {
 
     result += hex + ' ';
 
-    trace.push(
-      'Blok[' + i + ']: "' +
-      padded.replace(/\x00/g,'_') +
-      '"\n' +
+   trace.push(
+  'Blok[' + i + ']: "' +
+  padded.replace(/\x00/g,'_') +
+  '"\n' +
 
-      'Caesar     : ' +
-      afterCaesar.replace(/\x00/g,'_') + '\n' +
+  'Caesar HEX : ' +
+  strToHex(afterCaesar) + '\n' +
 
-      'Transpose  : ' +
-      afterTrans.replace(/\x00/g,'_') + '\n' +
+  'Transpose HEX : ' +
+  strToHex(afterTrans) + '\n' +
 
-      'HEX        : ' + hex + '\n' +
+  'HEX        : ' + hex + '\n' +
 
-      'BIN        : ' + bin + '\n'
+  'BIN        : ' + bin + '\n'
     );
   }
 
@@ -552,11 +552,11 @@ function ecbDecrypt() {
         'Blok[' + i + ']: ' +
         hexBlocks[i] + '\n' +
 
-        'InvTranspose : ' +
-        afterInvT.replace(/\x00/g,'_') + '\n' +
+       'InvTranspose HEX : ' +
+strToHex(afterInvT) + '\n' +
 
-        'InvCaesar    : ' +
-        afterInvC.replace(/\x00/g,'_') + '\n'
+'InvCaesar HEX    : ' +
+strToHex(afterInvC) + '\n'
       );
 
       plain += afterInvC;
@@ -642,20 +642,20 @@ function cbcEncrypt() {
 
     prevBlock = afterTrans;
 
-    trace.push(
-      'Blok[' + i + ']: "' +
-      padded.replace(/\x00/g,'_') +
-      '"\n' +
+   trace.push(
+  'Blok[' + i + ']: "' +
+  padded.replace(/\x00/g,'_') +
+  '"\n' +
 
-      'XOR Result : ' +
-      afterXOR.replace(/\x00/g,'_') + '\n' +
+  'XOR HEX    : ' +
+  strToHex(afterXOR) + '\n' +
 
-      'Transpose  : ' +
-      afterTrans.replace(/\x00/g,'_') + '\n' +
+  'Transpose HEX : ' +
+  strToHex(afterTrans) + '\n' +
 
-      'HEX        : ' + hex + '\n' +
+  'HEX        : ' + hex + '\n' +
 
-      'BIN        : ' + bin + '\n'
+  'BIN        : ' + bin + '\n'
     );
   }
 
@@ -717,11 +717,11 @@ function cbcDecrypt() {
         'Blok[' + i + ']: ' +
         hexBlocks[i] + '\n' +
 
-        'InvTranspose : ' +
-        afterInvT.replace(/\x00/g,'_') + '\n' +
+        'InvTranspose HEX : ' +
+strToHex(afterInvT) + '\n' +
 
-        'Undo XOR     : ' +
-        afterXOR.replace(/\x00/g,'_') + '\n'
+'Undo XOR HEX     : ' +
+strToHex(afterXOR) + '\n'
       );
 
       prevBlock = block;
