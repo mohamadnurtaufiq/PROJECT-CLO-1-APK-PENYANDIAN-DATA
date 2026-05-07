@@ -209,8 +209,14 @@
 
 // ---- TAB ----
 function showTab(tab, btn) {
-  document.querySelectorAll('.tab-content').forEach(function(el){ el.classList.remove('active'); });
-  document.querySelectorAll('.tab-btn').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(el){
+    el.classList.remove('active');
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(function(el){
+    el.classList.remove('active');
+  });
+
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
 }
@@ -222,240 +228,517 @@ function getIdentity() {
 }
 
 function parseKey(str) {
-  return str.split(',').map(function(s){ return parseInt(s.trim()); }).filter(function(n){ return !isNaN(n); });
+  return str.split(',')
+    .map(function(s){
+      return parseInt(s.trim());
+    })
+    .filter(function(n){
+      return !isNaN(n);
+    });
 }
 
 function padBlock(block, size) {
-  while (block.length < size) block += '\x00';
+  while (block.length < size)
+    block += '\x00';
+
   return block;
 }
 
 function splitBlocks(text, size) {
   var blocks = [];
-  for (var i = 0; i < text.length; i += size) blocks.push(text.slice(i, i + size));
+
+  for (var i = 0; i < text.length; i += size)
+    blocks.push(text.slice(i, i + size));
+
   return blocks;
 }
 
+// ---- HEX ----
 function strToHex(str) {
   var h = '';
-  for (var i = 0; i < str.length; i++) h += str.charCodeAt(i).toString(16).padStart(2, '0');
+
+  for (var i = 0; i < str.length; i++) {
+    h += str.charCodeAt(i)
+      .toString(16)
+      .padStart(2, '0');
+  }
+
   return h;
+}
+
+// ---- BINER ----
+function strToBin(str) {
+  var b = '';
+
+  for (var i = 0; i < str.length; i++) {
+    b += str.charCodeAt(i)
+      .toString(2)
+      .padStart(8, '0') + ' ';
+  }
+
+  return b.trim();
 }
 
 function hexToStr(hex) {
   var s = '';
-  for (var i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.slice(i, i+2), 16));
+
+  for (var i = 0; i < hex.length; i += 2) {
+    s += String.fromCharCode(
+      parseInt(hex.slice(i, i + 2), 16)
+    );
+  }
+
   return s;
 }
 
-function setOut(id, val) { document.getElementById(id).textContent = val || '-'; }
+function setOut(id, val) {
+  document.getElementById(id).textContent = val || '-';
+}
 
 function setTrace(id, lines) {
   var el = document.getElementById(id);
+
   el.textContent = lines.join('\n');
   el.style.display = 'block';
 }
 
-// ---- METODE 1: CAESAR CIPHER ----
-// Enkripsi: C = (P + shift) mod 256
-// Dekripsi: P = (C - shift + 256) mod 256
-// Ref: Stallings (2017), hal. 34-35
+// =====================================================
+// METODE 1 : CAESAR CIPHER
+// =====================================================
+
 function caesarEnc(block, shift) {
   var r = '';
-  for (var i = 0; i < block.length; i++)
-    r += String.fromCharCode((block.charCodeAt(i) + shift) % 256);
+
+  for (var i = 0; i < block.length; i++) {
+    r += String.fromCharCode(
+      (block.charCodeAt(i) + shift) % 256
+    );
+  }
+
   return r;
 }
 
 function caesarDec(block, shift) {
   var r = '';
-  for (var i = 0; i < block.length; i++)
-    r += String.fromCharCode((block.charCodeAt(i) - shift + 256) % 256);
+
+  for (var i = 0; i < block.length; i++) {
+    r += String.fromCharCode(
+      (block.charCodeAt(i) - shift + 256) % 256
+    );
+  }
+
   return r;
 }
 
-// ---- METODE 2: TRANSPOSITION CIPHER ----
-// Baca karakter blok berdasarkan urutan kolom dari kunci.
-// Contoh kunci [3,1,4,2]: baca kolom ke-1 dulu, lalu 2, 3, 4
-// (artinya posisi dengan nilai kunci terkecil dibaca pertama)
-// Ref: Stallings (2017), hal. 38-39
+// =====================================================
+// METODE 2 : TRANSPOSITION CIPHER
+// =====================================================
+
 function buildReadOrder(blockLen, keyArr) {
+
   var minK = Math.min.apply(null, keyArr);
-  var key0 = keyArr.map(function(k){ return k - minK; });
+
+  var key0 = keyArr.map(function(k){
+    return k - minK;
+  });
+
   var kLen = key0.length;
-  var sorted = key0.map(function(v, i){ return {v:v, i:i}; }).sort(function(a,b){ return a.v - b.v; });
+
+  var sorted = key0
+    .map(function(v, i){
+      return {v:v, i:i};
+    })
+    .sort(function(a,b){
+      return a.v - b.v;
+    });
+
   var order = [];
-  sorted.forEach(function(s) {
+
+  sorted.forEach(function(s){
+
     for (var row = 0; row * kLen + s.i < blockLen; row++) {
+
       var pos = row * kLen + s.i;
-      if (pos < blockLen) order.push(pos);
+
+      if (pos < blockLen)
+        order.push(pos);
     }
   });
+
   return order;
 }
 
 function transposeEnc(block, keyArr) {
+
   var order = buildReadOrder(block.length, keyArr);
+
   var r = '';
-  for (var i = 0; i < order.length; i++) r += block[order[i]];
-  while (r.length < block.length) r += '\x00';
+
+  for (var i = 0; i < order.length; i++) {
+    r += block[order[i]];
+  }
+
+  while (r.length < block.length)
+    r += '\x00';
+
   return r;
 }
 
 function transposeDec(block, keyArr) {
+
   var order = buildReadOrder(block.length, keyArr);
+
   var r = new Array(block.length).fill('\x00');
-  for (var i = 0; i < order.length && i < block.length; i++) r[order[i]] = block[i];
+
+  for (var i = 0; i < order.length && i < block.length; i++) {
+    r[order[i]] = block[i];
+  }
+
   return r.join('');
 }
 
-// ---- XOR DUA STRING (untuk CBC chaining) ----
-// Ref: Stallings (2017), hal. 214-216
+// =====================================================
+// XOR UNTUK CBC
+// =====================================================
+
 function xorStr(a, b) {
+
   var r = '';
-  for (var i = 0; i < a.length; i++)
-    r += String.fromCharCode(a.charCodeAt(i) ^ b.charCodeAt(i % b.length));
+
+  for (var i = 0; i < a.length; i++) {
+
+    r += String.fromCharCode(
+      a.charCodeAt(i) ^
+      b.charCodeAt(i % b.length)
+    );
+  }
+
   return r;
 }
 
-// ===========================================================
+// =====================================================
 // ECB ENCRYPT
-// Alur tiap blok: plaintext -> pad -> Caesar -> Transposition -> hex
-// ===========================================================
-function ecbEncrypt() {
-  var plain = document.getElementById('ecb-plain-in').value;
-  var shift = parseInt(document.getElementById('ecb-shift').value) || 5;
-  var bSize = parseInt(document.getElementById('ecb-block').value) || 8;
-  var tkey  = parseKey(document.getElementById('ecb-tkey').value);
-  var full  = getIdentity() + plain;
+// =====================================================
 
-  if (!plain) { setOut('ecb-enc-out', 'ERROR: Input kosong.'); return; }
-  if (tkey.length < 2) { setOut('ecb-enc-out', 'ERROR: Kunci transposisi minimal 2 angka.'); return; }
+function ecbEncrypt() {
+
+  var plain = document.getElementById('ecb-plain-in').value;
+
+  var shift = parseInt(
+    document.getElementById('ecb-shift').value
+  ) || 5;
+
+  var bSize = parseInt(
+    document.getElementById('ecb-block').value
+  ) || 8;
+
+  var tkey = parseKey(
+    document.getElementById('ecb-tkey').value
+  );
+
+  var full = getIdentity() + plain;
+
+  if (!plain) {
+    setOut('ecb-enc-out', 'ERROR: Input kosong.');
+    return;
+  }
+
+  if (tkey.length < 2) {
+    setOut('ecb-enc-out',
+      'ERROR: Kunci transposisi minimal 2 angka.');
+    return;
+  }
 
   var blocks = splitBlocks(full, bSize);
-  var trace = ['=== TRACE ENKRIPSI ECB ===',
+
+  var trace = [
+    '=== TRACE ENKRIPSI ECB ===',
     'Input    : ' + full,
-    'Blok size: ' + bSize + ' | Shift: ' + shift + ' | Tkey: [' + tkey + ']',
-    'Jml blok : ' + blocks.length, '---'];
+    'Blok size: ' + bSize +
+    ' | Shift: ' + shift +
+    ' | Tkey: [' + tkey + ']',
+    'Jml blok : ' + blocks.length,
+    '---'
+  ];
+
   var result = '';
 
   for (var i = 0; i < blocks.length; i++) {
-    var padded     = padBlock(blocks[i], bSize);
-    var afterCaesar = caesarEnc(padded, shift);         // Metode 1
-    var afterTrans  = transposeEnc(afterCaesar, tkey);  // Metode 2
-    var hex         = strToHex(afterTrans);
+
+    var padded = padBlock(blocks[i], bSize);
+
+    // Caesar Cipher
+    var afterCaesar = caesarEnc(padded, shift);
+
+    // Transposition
+    var afterTrans = transposeEnc(afterCaesar, tkey);
+
+    // HEX
+    var hex = strToHex(afterTrans);
+
+    // BINER
+    var bin = strToBin(afterTrans);
+
     result += hex + ' ';
-    trace.push('Blok[' + i + ']: "' + padded.replace(/\x00/g,'_') + '" -> Caesar -> Transpose -> ' + hex);
+
+    trace.push(
+      'Blok[' + i + ']: "' +
+      padded.replace(/\x00/g,'_') +
+      '"\n' +
+
+      'Caesar     : ' +
+      afterCaesar.replace(/\x00/g,'_') + '\n' +
+
+      'Transpose  : ' +
+      afterTrans.replace(/\x00/g,'_') + '\n' +
+
+      'HEX        : ' + hex + '\n' +
+
+      'BIN        : ' + bin + '\n'
+    );
   }
 
   setOut('ecb-enc-out', result.trim());
+
   setTrace('ecb-enc-trace', trace);
 }
 
-// ===========================================================
+// =====================================================
 // ECB DECRYPT
-// Alur tiap blok: hex -> inv-Transposition -> inv-Caesar -> plaintext
-// ===========================================================
+// =====================================================
+
 function ecbDecrypt() {
+
   var cipher = document.getElementById('ecb-cipher-in').value.trim();
-  var shift  = parseInt(document.getElementById('ecb-shift').value) || 5;
-  var bSize  = parseInt(document.getElementById('ecb-block').value) || 8;
-  var tkey   = parseKey(document.getElementById('ecb-tkey').value);
 
-  if (!cipher) { setOut('ecb-dec-out', 'ERROR: Input kosong.'); return; }
+  var shift = parseInt(
+    document.getElementById('ecb-shift').value
+  ) || 5;
 
-  var hexBlocks = cipher.split(' ').filter(function(s){ return s.length > 0; });
-  var trace = ['=== TRACE DEKRIPSI ECB ===', '---'];
+  var tkey = parseKey(
+    document.getElementById('ecb-tkey').value
+  );
+
+  if (!cipher) {
+    setOut('ecb-dec-out', 'ERROR: Input kosong.');
+    return;
+  }
+
+  var hexBlocks = cipher.split(' ')
+    .filter(function(s){
+      return s.length > 0;
+    });
+
+  var trace = [
+    '=== TRACE DEKRIPSI ECB ===',
+    '---'
+  ];
+
   var plain = '';
 
   try {
+
     for (var i = 0; i < hexBlocks.length; i++) {
-      var block       = hexToStr(hexBlocks[i]);
-      var afterInvT   = transposeDec(block, tkey);      // Inv Metode 2
-      var afterInvC   = caesarDec(afterInvT, shift);    // Inv Metode 1
-      trace.push('Blok[' + i + ']: ' + hexBlocks[i] + ' -> inv-Transpose -> inv-Caesar -> "' + afterInvC.replace(/\x00/g,'_') + '"');
+
+      var block = hexToStr(hexBlocks[i]);
+
+      // inverse transpose
+      var afterInvT = transposeDec(block, tkey);
+
+      // inverse caesar
+      var afterInvC = caesarDec(afterInvT, shift);
+
+      trace.push(
+        'Blok[' + i + ']: ' +
+        hexBlocks[i] + '\n' +
+
+        'InvTranspose : ' +
+        afterInvT.replace(/\x00/g,'_') + '\n' +
+
+        'InvCaesar    : ' +
+        afterInvC.replace(/\x00/g,'_') + '\n'
+      );
+
       plain += afterInvC;
     }
+
     plain = plain.replace(/\x00+$/, '');
+
     setOut('ecb-dec-out', plain);
+
     setTrace('ecb-dec-trace', trace);
+
   } catch(e) {
-    setOut('ecb-dec-out', 'ERROR: Format ciphertext tidak valid.');
+
+    setOut('ecb-dec-out',
+      'ERROR: Format ciphertext tidak valid.');
   }
 }
 
-// ===========================================================
+// =====================================================
 // CBC ENCRYPT
-// Alur tiap blok: plaintext -> XOR(prev_cipher) -> Transposition -> hex
-// Blok pertama: XOR dengan IV
-// ===========================================================
+// =====================================================
+
 function cbcEncrypt() {
+
   var plain = document.getElementById('cbc-plain-in').value;
-  var iv    = document.getElementById('cbc-iv').value || 'TELKOM01';
-  var bSize = parseInt(document.getElementById('cbc-block').value) || 8;
-  var tkey  = parseKey(document.getElementById('cbc-tkey').value);
-  var full  = getIdentity() + plain;
 
-  if (!plain) { setOut('cbc-enc-out', 'ERROR: Input kosong.'); return; }
-  if (tkey.length < 2) { setOut('cbc-enc-out', 'ERROR: Kunci transposisi minimal 2 angka.'); return; }
+  var iv = document.getElementById('cbc-iv').value || 'TELKOM01';
 
-  var prevBlock = padBlock(iv.slice(0, bSize), bSize); // C_0 = IV
+  var bSize = parseInt(
+    document.getElementById('cbc-block').value
+  ) || 8;
+
+  var tkey = parseKey(
+    document.getElementById('cbc-tkey').value
+  );
+
+  var full = getIdentity() + plain;
+
+  if (!plain) {
+    setOut('cbc-enc-out', 'ERROR: Input kosong.');
+    return;
+  }
+
+  if (tkey.length < 2) {
+    setOut('cbc-enc-out',
+      'ERROR: Kunci transposisi minimal 2 angka.');
+    return;
+  }
+
+  var prevBlock = padBlock(iv.slice(0, bSize), bSize);
+
   var blocks = splitBlocks(full, bSize);
-  var trace = ['=== TRACE ENKRIPSI CBC ===',
+
+  var trace = [
+    '=== TRACE ENKRIPSI CBC ===',
     'Input    : ' + full,
     'IV       : ' + iv.slice(0, bSize),
-    'Blok size: ' + bSize + ' | Tkey: [' + tkey + ']',
-    'Jml blok : ' + blocks.length, '---'];
+    'Blok size: ' + bSize +
+    ' | Tkey: [' + tkey + ']',
+    'Jml blok : ' + blocks.length,
+    '---'
+  ];
+
   var result = '';
 
   for (var i = 0; i < blocks.length; i++) {
-    var padded      = padBlock(blocks[i], bSize);
-    var afterXOR    = xorStr(padded, prevBlock);        // Metode 1: XOR Chaining
-    var afterTrans  = transposeEnc(afterXOR, tkey);     // Metode 2: Transposition
-    var hex         = strToHex(afterTrans);
+
+    var padded = padBlock(blocks[i], bSize);
+
+    // XOR chaining
+    var afterXOR = xorStr(padded, prevBlock);
+
+    // Transposition
+    var afterTrans = transposeEnc(afterXOR, tkey);
+
+    // HEX
+    var hex = strToHex(afterTrans);
+
+    // BINER
+    var bin = strToBin(afterTrans);
+
     result += hex + ' ';
-    prevBlock = afterTrans; // simpan untuk chaining blok berikutnya
-    trace.push('Blok[' + i + ']: "' + padded.replace(/\x00/g,'_') + '" XOR C_prev -> Transpose -> ' + hex);
+
+    prevBlock = afterTrans;
+
+    trace.push(
+      'Blok[' + i + ']: "' +
+      padded.replace(/\x00/g,'_') +
+      '"\n' +
+
+      'XOR Result : ' +
+      afterXOR.replace(/\x00/g,'_') + '\n' +
+
+      'Transpose  : ' +
+      afterTrans.replace(/\x00/g,'_') + '\n' +
+
+      'HEX        : ' + hex + '\n' +
+
+      'BIN        : ' + bin + '\n'
+    );
   }
 
   setOut('cbc-enc-out', result.trim());
+
   setTrace('cbc-enc-trace', trace);
 }
 
-// ===========================================================
+// =====================================================
 // CBC DECRYPT
-// Alur tiap blok: hex -> inv-Transposition -> XOR(prev_cipher) -> plaintext
-// ===========================================================
+// =====================================================
+
 function cbcDecrypt() {
+
   var cipher = document.getElementById('cbc-cipher-in').value.trim();
-  var iv     = document.getElementById('cbc-iv').value || 'TELKOM01';
-  var bSize  = parseInt(document.getElementById('cbc-block').value) || 8;
-  var tkey   = parseKey(document.getElementById('cbc-tkey').value);
 
-  if (!cipher) { setOut('cbc-dec-out', 'ERROR: Input kosong.'); return; }
+  var iv = document.getElementById('cbc-iv').value || 'TELKOM01';
 
-  var hexBlocks = cipher.split(' ').filter(function(s){ return s.length > 0; });
+  var bSize = parseInt(
+    document.getElementById('cbc-block').value
+  ) || 8;
+
+  var tkey = parseKey(
+    document.getElementById('cbc-tkey').value
+  );
+
+  if (!cipher) {
+    setOut('cbc-dec-out', 'ERROR: Input kosong.');
+    return;
+  }
+
+  var hexBlocks = cipher.split(' ')
+    .filter(function(s){
+      return s.length > 0;
+    });
+
   var prevBlock = padBlock(iv.slice(0, bSize), bSize);
-  var trace = ['=== TRACE DEKRIPSI CBC ===', '---'];
+
+  var trace = [
+    '=== TRACE DEKRIPSI CBC ===',
+    '---'
+  ];
+
   var plain = '';
 
   try {
+
     for (var i = 0; i < hexBlocks.length; i++) {
-      var block     = hexToStr(hexBlocks[i]);
-      var afterInvT = transposeDec(block, tkey);        // Inv Metode 2
-      var afterXOR  = xorStr(afterInvT, prevBlock);     // Inv Metode 1: undo XOR
-      trace.push('Blok[' + i + ']: ' + hexBlocks[i] + ' -> inv-Transpose -> XOR C_prev -> "' + afterXOR.replace(/\x00/g,'_') + '"');
-      prevBlock = block; // gunakan cipher block asli untuk iterasi berikutnya
+
+      var block = hexToStr(hexBlocks[i]);
+
+      // inverse transpose
+      var afterInvT = transposeDec(block, tkey);
+
+      // undo XOR
+      var afterXOR = xorStr(afterInvT, prevBlock);
+
+      trace.push(
+        'Blok[' + i + ']: ' +
+        hexBlocks[i] + '\n' +
+
+        'InvTranspose : ' +
+        afterInvT.replace(/\x00/g,'_') + '\n' +
+
+        'Undo XOR     : ' +
+        afterXOR.replace(/\x00/g,'_') + '\n'
+      );
+
+      prevBlock = block;
+
       plain += afterXOR;
     }
+
     plain = plain.replace(/\x00+$/, '');
+
     setOut('cbc-dec-out', plain);
+
     setTrace('cbc-dec-trace', trace);
+
   } catch(e) {
-    setOut('cbc-dec-out', 'ERROR: Format ciphertext tidak valid.');
+
+    setOut('cbc-dec-out',
+      'ERROR: Format ciphertext tidak valid.');
   }
 }
 </script>
-
-</body>
-</html>
